@@ -37,12 +37,19 @@ router.post('/register', function(req, res){
 			classes: []
 		});
 
-		User.createUser(newUser, function(err, user){
+		User.getUserByEmail(email, function(err, user){
 			if(err) throw err;
-			console.log(user);
-		});
+			if(!user){
+				User.createUser(newUser, function(err, user){
+					if(err) throw err;
+					console.log(user);
+				});
 
-		res.status(200).send('test');
+				res.status(200).send('Created user');
+			} else {
+				res.status(400).send('User already exists');
+			}
+		});
 	}
 });
 
@@ -52,16 +59,15 @@ router.post('/login', function(req, res) {
 	User.getUserByEmail(username, function(err, user){
 		if(err) throw err;
 		if(!user){
-			res.status(404).send('user not found');
+			res.status(404).send('User not found');
 		}
 
 		User.comparePassword(password, user.password, function(err, isMatch){
 			if(err) throw err;
 			if(isMatch){
-				console.log('GOOD');
-				res.send(req.body);
+				res.status(200).send(user);
 			} else {
-				res.status(404).send('bad');
+				res.status(401).send('Invalid credentials');
 			}
 		});
 	});
