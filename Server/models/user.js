@@ -13,9 +13,6 @@ var UserSchema = mongoose.Schema({
 	phone: {
 		type: String
 	},
-	provider: {
-		type: String
-	},
 	classes: {
 		type: Array
 	}

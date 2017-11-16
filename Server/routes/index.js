@@ -3,15 +3,6 @@ var router = express.Router();
 
 var User = require('../models/user');
 
-router.get('/classes', function(req, res){
-	res.render('index', {classes:req.user.classes});
-});
-
-// Get Homepage
-router.get('/', ensureAuthenticated, function(req, res){
-	res.redirect('/classes');
-});
-
 router.post('/classes', function(req, res){
 	var name = req.body.name;
 	var url = req.body.url;
@@ -20,7 +11,7 @@ router.post('/classes', function(req, res){
 	req.checkBody('url', 'Class url is required').notEmpty();
 
 	var errors = req.validationErrors();
-	if(errors){
+	if (errors){
 		res.render('index',{
 			errors:errors,
 			classes:req.user.classes
@@ -40,23 +31,5 @@ router.post('/classes', function(req, res){
 		}
 	}
 });
-
-// Get Homepage
-router.get('/settings', function(req, res){
-	res.render('settings');
-});
-
-router.post('/settings',  function(req, res){
-
-});
-
-function ensureAuthenticated(req, res, next){
-	if(req.isAuthenticated()){
-		return next();
-	} else {
-		//req.flash('error_msg','You are not logged in');
-		res.render('home');
-	}
-}
 
 module.exports = router;

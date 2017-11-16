@@ -1,25 +1,17 @@
 var express = require('express');
 var router = express.Router();
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
 
 var User = require('../models/user');
 
-// Register
-router.get('/register', function(req, res){
-	res.render('register');
-});
-
-// Login
-router.get('/login', function(req, res){
-	res.render('login');
+router.post('/', function(request, response){
+  console.log(request.body);      // your JSON
+  response.send(request.body);    // echo the result back
 });
 
 // Register User
 router.post('/register', function(req, res){
 	var email = req.body.email;
 	var phone = req.body.phone;
-	var provider = req.body.provider;
 	var password = req.body.password;
 	var password2 = req.body.password2;
 
@@ -28,14 +20,13 @@ router.post('/register', function(req, res){
 	req.checkBody('email', 'Email is not valid').isEmail();
 	req.checkBody('phone', 'Phone Number is required').notEmpty();
 	req.checkBody('phone', 'Phone Number is not valid').isMobilePhone('en-US');
-	req.checkBody('provider', 'Provider is required').notEmpty();
 	req.checkBody('password', 'Password is required').notEmpty();
 	req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
 	var errors = req.validationErrors();
 
-	if(errors){
-		res.render('register',{
+	if (errors) {
+		res.status(400).send('register',{
 			errors:errors
 		});
 	} else {
@@ -43,7 +34,6 @@ router.post('/register', function(req, res){
 			email: email,
 			password: password,
 			phone: phone,
-			provider: provider,
 			classes: []
 		});
 
@@ -52,57 +42,29 @@ router.post('/register', function(req, res){
 			console.log(user);
 		});
 
-		req.flash('success_msg', 'You are registered and can now login');
-
-		res.redirect('/users/login');
+		res.status(200).send('test');
 	}
 });
 
-passport.use(new LocalStrategy({
-    usernameField: 'email',
-    passwordField: 'password',
-    session: true
-  },
-  function(username, password, done) {
-   User.getUserByEmail(username, function(err, user){
-   	if(err) throw err;
-   	if(!user){
-   		return done(null, false, {message: 'Unknown User'});
-   	}
+router.post('/login', function(req, res) {
+	var username = req.body.email;
+	var password = req.body.password;
+	User.getUserByEmail(username, function(err, user){
+		if(err) throw err;
+		if(!user){
+			res.status(404).send('user not found');
+		}
 
-   	User.comparePassword(password, user.password, function(err, isMatch){
-   		if(err) throw err;
-   		if(isMatch){
-   			return done(null, user);
-   		} else {
-   			return done(null, false, {message: 'Invalid password'});
-   		}
-   	});
-   });
-  }));
-
-passport.serializeUser(function(user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(function(id, done) {
-  User.getUserById(id, function(err, user) {
-    done(err, user);
-  });
-});
-
-router.post('/login',
-  passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login', failureFlash: true}),
-  function(req, res) {
-    res.redirect('/');
-  });
-
-router.get('/logout', function(req, res){
-	req.logout();
-
-	req.flash('success_msg', 'You are now logged out');
-
-	res.redirect('/users/login');
+		User.comparePassword(password, user.password, function(err, isMatch){
+			if(err) throw err;
+			if(isMatch){
+				console.log('GOOD');
+				res.send(req.body);
+			} else {
+				res.status(404).send('bad');
+			}
+		});
+	});
 });
 
 module.exports = router;
